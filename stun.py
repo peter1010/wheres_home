@@ -2,43 +2,55 @@ import struct
 import socket
 import os
 import functools
+import logging
+import select
 
-stun_servers_list = (
-    ('stun.ekiga.net', 3478),
-    ('stunserver.org', 3478),
-    ('stun.ideasip.com', 3478),
-    ('stun.softjoys.com', 3478),
-    ('stun.voipbuster.com', 3478)
-)
+import stun_list
 
+logging.basicConfig(level=logging.DEBUG)
 
 TLV_MAP_ADDR = 1
-TLV_RESP_ADDR = 2
-TLV_CHG_REQ = 3
-TLV_SRC_ADDR = 4
-TLV_CHG_ADDR = 5
+TLV_RESP_ADDR = 2  # Obsolete in RFC5389
+TLV_CHG_REQ = 3    # Obsolete in RFC5389
+TLV_SRC_ADDR = 4   # Obsolete in RFC5389
+TLV_CHG_ADDR = 5   # Obsolete in RFC5389
 TLV_USER = 6
-TLV_PASS = 7
+TLV_PASS = 7       # Obsolete in RFC5389
 TLV_MSG_INT = 8
 TLV_ERR_CODE = 9
 TLV_UNKNOWN = 10
-TLV_REFLECT = 11
+TLV_REFLECT = 11   # Obsoleted in RFC5389
 
+# From RFC5389
+TLV_REALM = 0x14
+TLV_NONCE = 0x15
+TLV_XOR_MAP_ADDR = 0x20
+
+
+# From RFC3489bis-02
+TLV_XOR_MAP_ADDR_bis = 0x8020
+TLV_XOR_ONLY = 0x8021
+
+# From RFC5389
+TLV_SOFTWARE = 0x8022
+TLV_ALT_SERVER = 0x8023
+TLV_FINGERPRINT = 0x8028
 
 def create_transaction_id():
-    """Generate a 128 bit (16 byte) random number"""
-    return functools.reduce(lambda x,y: (x << 8) + y, os.urandom(16))
+    """Generate a 96 bit (12 byte) random number"""
+    return functools.reduce(lambda x,y: (x << 8) + y, os.urandom(12))
 
 
 def create_msg_header(msg_type, msg_length, tran_id):
     """STUN header is 20 bytes, 2 bytes msg_type, 2 bytes msg length, 16 bytes
     Transaction ID"""
-    return struct.pack(">HHQQ", msg_type, msg_length, tran_id >> 64, 
+    magic = 0x2112A442
+    return struct.pack(">HHLLQ", msg_type, msg_length, magic, tran_id >> 64, 
             tran_id & 0xFFFFFFFFFFFFFFFF)
 
 
 def create_binding_request(tran_id):
-    """Create a binding request, message type is 1 (see RFC3489)"""
+    """Create a binding request, message type is 1 (see RFC5389)"""
     return create_msg_header(1, 0, tran_id)
 
 def extract_tlv(msg):
@@ -48,10 +60,60 @@ def extract_tlv(msg):
         return name, value, msg[4+val_len:]
     raise RuntimeError
 
-def process_map_addr(value):
-    family, port, a1, a2, a3, a4 = struct.unpack(">xBHBBBB", value)
-    addr = ".".join([str(x) for x in (a1,a2,a3,a4)])
+def process_tlv_addr(value):
+    family, port = struct.unpack(">xBH", value[:4])
+    if family == 0x01:   # IPv4
+        addr = ".".join([str(x) for x in value[4:]])
+    elif family == 0x02: # IPv6
+        addr = ":".join([("%04X" % x) for x in struct.unpack(">HHHHHHHH",
+                value[4:])])
     return (addr, port)
+
+
+def process_map_addr(value):
+    """Process the MAPPED-ADDRESS attribute"""
+    addr_port = process_tlv_addr(value)
+    logging.debug("MAPPED-ADDRESS=%s" % str(addr_port))
+    return addr_port
+
+
+def process_src_addr(value):
+    """Process the SOURCE-ADDRESS attribute"""
+    addr_port = process_tlv_addr(value)
+    logging.debug("SOURCE-ADDRESS=%s" % str(addr_port))
+    return addr_port
+
+
+def process_chg_addr(value):
+    """Process the CHANGED-ADDRESS attribute"""
+    addr_port = process_tlv_addr(value)
+    logging.debug("CHANGED-ADDRESS=%s" % str(addr_port))
+    return addr_port
+
+
+def process_refl_addr(value):
+    """Process the REFLECT-FROM attribute"""
+    addr_port = process_tlv_addr(value)
+    logging.debug("REFLECT-FROM=%s" % str(addr_port))
+    return addr_port
+
+
+def process_xor_map_addr(value):
+    """Process the XOR-MAPPED-ADDRESS attribute"""
+    family, port = struct.unpack(">xBH", value[:4])
+    port = port ^ 0x2112
+    if family == 0x01:   # IPv4
+        addr = ".".join([str(x ^ m) for x,m in zip(value[4:], (0x21, 0x12, 0xA4,
+            0x42))])
+    elif family == 0x02: # IPv6
+        raise RuntimeError
+    logging.debug("XOR-MAPPED-ADDRESS=%s" % str((addr, port)))
+    return (addr, port)
+
+
+def process_software(value):
+    """Process the SOFTWARE attribute"""
+    logging.info("SOFWARE=%s" % value.decode('utf8'))
 
 
 def process_binding_response(body):
@@ -61,31 +123,36 @@ def process_binding_response(body):
         name, value, body = extract_tlv(body)
         if name == TLV_MAP_ADDR:
             mapped = process_map_addr(value)
-            print("TLV_MAP_ADDR", mapped)
         elif name == TLV_SRC_ADDR:
-            src = process_map_addr(value)
-            print("TLV_SRC_ADDR", src)
+            src = process_src_addr(value)
         elif name == TLV_CHG_ADDR:
-            chg = process_map_addr(value)
-            print("TLV_CHG_ADDR", chg)
+            chg = process_chg_addr(value)
         elif name == TLV_MSG_INT:
-            print("TLV_MSG_INT")
+            logging.debug("TLV_MSG_INT")
             pass
         elif name == TLV_REFLECT:
-            refl = process_map_addr(value)
-            print("TLV_REFLECT", refl)
+            refl = process_refl_addr(value)
+        elif (name == TLV_XOR_MAP_ADDR) or (name == TLV_XOR_MAP_ADDR_bis):
+            mapped = process_xor_map_addr(value)
+        elif name == TLV_SOFTWARE:
+            process_software(value)
         else:
+            logging.warning("Unknown TLV = %i" % name)
             return None
+    return mapped[0]
 
 def process_response(buf, req_tran_id):
     hdr = buf[:20]
-    msg_type, msg_len, part1, part2 = struct.unpack(">HHQQ", hdr)
+    msg_type, msg_len, magic, part1, part2 = struct.unpack(">HHLLQ", hdr)
     resp_tran_id = part1 << 64 | part2
+    body = buf[20:20+msg_len]
+    if magic != 0x2112A442:
+        loggin.error("Invalid STUN magic cookie")
     if resp_tran_id != req_tran_id:
         print("Mis-match between Request and Response Transaction ID")
         return None
     if msg_type == 0x101:   # Binding Response
-        return process_binding_response(buf[20:])
+        return process_binding_response(body)
     elif msg_type == 0x111: # Binding Error Response
         pass
     elif msg_type == 0x102: # Shared Secret Response
@@ -93,7 +160,7 @@ def process_response(buf, req_tran_id):
     elif msg_type == 0x112: # Shared Secret Error Response
         pass
     else:
-        print("Invalid STUN response msg type (%i)", msg_type)
+        print("Invalid STUN response msg type (%04x)", msg_type)
         return None
 
 def do_stun_transaction():
@@ -101,18 +168,32 @@ def do_stun_transaction():
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('0.0.0.0', 54320))
 
-    stun_server = stun_servers_list[0]
+    public_addr = None
 
-    tran_id = create_transaction_id()
-    print("tran_id=", tran_id)
-    msg = create_binding_request(tran_id)
-    try:
-        s.sendto(msg, stun_server)
-    except socket.gaierror:
-        return False
-    buf, addr = s.recvfrom(2048)
-    process_response(buf, tran_id)
+    for server_tries in range(5):
+        if public_addr:
+            break
+        stun_server = stun_list.pick_server()
+        logging.info("Connecting to %s" % str(stun_server))
+        tran_id = create_transaction_id()
+        logging.debug("TID=%i" % tran_id)
+        msg = create_binding_request(tran_id)
+        for msg_tries in range(5):
+            if public_addr:
+                break
+            try:
+                s.sendto(msg, stun_server)
+            except socket.gaierror:
+                break
+    
+            rds, wrs, ers = select.select([s],[],[], 3.0)
+            if len(rds) > 0:
+                buf, addr = s.recvfrom(2048)
+                public_addr = process_response(buf, tran_id)
+            else:
+                logging.warning("Timed out waiting for response")
     s.close()
+    return public_addr
 
 if __name__ == "__main__":
-    do_stun_transaction()
+    print(do_stun_transaction())
