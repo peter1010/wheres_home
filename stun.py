@@ -178,7 +178,8 @@ def do_stun_transaction():
         tran_id = create_transaction_id()
         logging.debug("TID=%i" % tran_id)
         msg = create_binding_request(tran_id)
-        for msg_tries in range(5):
+        timeout = 0.5
+        for msg_tries in range(7):
             if public_addr:
                 break
             try:
@@ -186,11 +187,12 @@ def do_stun_transaction():
             except socket.gaierror:
                 break
     
-            rds, wrs, ers = select.select([s],[],[], 3.0)
+            rds, wrs, ers = select.select([s],[],[], timeout)
             if len(rds) > 0:
                 buf, addr = s.recvfrom(2048)
                 public_addr = process_response(buf, tran_id)
             else:
+                timeout = 2*timeout
                 logging.warning("Timed out waiting for response")
     s.close()
     return public_addr
