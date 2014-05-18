@@ -1,9 +1,11 @@
 [Unit]
-Description=Check battery
+Description=Find Current public IP address allocated by ISP
 
 [Service]
+User=nobody
+Group=nobody
 Type=oneshot
-ExecStart=/usr/bin/python /home/peter/git_repo/python_utils/battery/battery.py
+ExecStart=/usr/bin/python3 track_my_ip
 Nice=19
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7

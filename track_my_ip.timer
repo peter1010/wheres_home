@@ -1,9 +1,9 @@
 [Unit]
-Description=Check battery
+Description=Check Public IP address
 
 [Timer]
-OnBootSec=300
-OnUnitActiveSec=300
+OnBootSec=3600
+OnUnitActiveSec=3600
 
 [Install]
 WantedBy=timer.target
