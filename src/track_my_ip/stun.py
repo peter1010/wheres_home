@@ -45,7 +45,7 @@ def create_msg_header(msg_type, msg_length, tran_id):
     """STUN header is 20 bytes, 2 bytes msg_type, 2 bytes msg length, 16 bytes
     Transaction ID"""
     magic = 0x2112A442
-    return struct.pack(">HHLLQ", msg_type, msg_length, magic, tran_id >> 64, 
+    return struct.pack(">HHLLQ", msg_type, msg_length, magic, tran_id >> 64,
             tran_id & 0xFFFFFFFFFFFFFFFF)
 
 
@@ -186,7 +186,7 @@ def do_stun_transaction():
                 s.sendto(msg, stun_server)
             except socket.gaierror:
                 break
-    
+
             rds, wrs, ers = select.select([s],[],[], timeout)
             if len(rds) > 0:
                 buf, addr = s.recvfrom(2048)
