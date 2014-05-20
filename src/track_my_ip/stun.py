@@ -5,7 +5,7 @@ import functools
 import logging
 import select
 
-import stun_list
+from . import stun_list
 
 logging.basicConfig(level=logging.DEBUG)
 
