@@ -1,4 +1,8 @@
-import stun
+import sys
+
+print(sys.path)
+
+from . import stun
 import time
 import os
 
