@@ -1,0 +1,23 @@
+## arg 1:  the new package version
+post_install() {
+    systemctl enable track_my_ip.timer
+    systemctl start track_my_ip.timer
+}
+
+## arg 1:  the new package version
+## arg 2:  the old package version
+#pre_upgrade() {
+	# do something here
+#}
+
+## arg 1:  the new package version
+## arg 2:  the old package version
+#post_upgrade() {
+	# do something here
+#}
+
+## arg 1:  the old package version
+pre_remove() {
+    systemctl stop track_my_ip.timer
+    systemctl disable track_my_ip.timer
+}

@@ -7,6 +7,7 @@ import subprocess
 from distutils.core import setup
 from distutils.command import install_data
 
+
 class my_install_data(install_data.install_data):
     def run(self):
         retVal = super().run()
@@ -17,6 +18,7 @@ class my_install_data(install_data.install_data):
         print( self.outfiles)
         subprocess.call(["systemctl","enable","track_my_ip.timer"])
         subprocess.call(["systemctl","start","track_my_ip.timer"])
+
 
 setup(name='track_my_ip',
       version='1.0',
