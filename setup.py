@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
+import os
 from distutils.core import setup
 from distutils.command import install_data
 
 class my_install_data(install_data.install_data):
     def run(self):
         retVal = super().run()
+        for path in self.outfile:
+            if path.startswith("/var"):
+                os.chown()
         print( self.outfiles)
 
 setup(name='track_my_ip',
