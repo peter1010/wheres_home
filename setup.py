@@ -5,7 +5,17 @@ import pwd
 import subprocess
 
 from distutils.core import setup
-from distutils.command import install_data
+from distutils.command import install_data, install
+
+
+def start_service():
+    subprocess.call(["systemctl","enable","track_my_ip.timer"])
+    subprocess.call(["systemctl","start","track_my_ip.timer"])
+
+
+def stop_service():
+    subprocess.call(["systemctl","stop","track_my_ip.timer"])
+    subprocess.call(["systemctl","disable","track_my_ip.timer"])
 
 
 class my_install_data(install_data.install_data):
@@ -16,8 +26,15 @@ class my_install_data(install_data.install_data):
                 o = pwd.getpwnam("nobody")
                 os.chown(path, o.pw_uid, o.pw_gid)
         print( self.outfiles)
-        subprocess.call(["systemctl","enable","track_my_ip.timer"])
-        subprocess.call(["systemctl","start","track_my_ip.timer"])
+        return retVal
+
+
+class my_install(install.install):
+    def run(self):
+        retVal = super().run()
+        if not os.getenv("DONT_START"):
+            start_service()
+        return retVal;
 
 
 setup(name='track_my_ip',
@@ -33,6 +50,6 @@ setup(name='track_my_ip',
             ('/usr/lib/systemd/system',
                 ('track_my_ip.timer','track_my_ip.service')),
             ('/var/cache/track_my_ip',[])],
-      cmdclass = {'install_data': my_install_data}
+      cmdclass = {'install_data': my_install_data,
+                  'install' : my_install}
       )
-
