@@ -8,6 +8,7 @@ from . import notify
 CACHE_FILE="/var/cache/track_my_ip/history.txt"
 
 def get_last():
+    non_blank = None, None
     try:
         with open(CACHE_FILE) as in_fp:
             for line in in_fp:
@@ -15,7 +16,7 @@ def get_last():
                 if line:
                     non_blank = line
     except FileNotFoundError:
-        return None, None
+        pass
     return non_blank.split()[0]
 
 
