@@ -19,4 +19,5 @@ def sendMail(msg):
     if status != 0:
         print ("Sendmail exit status", status)
 
-sendMail("10.0.0.1")
+if __name__ == "__main__":
+    sendMail("10.0.0.1")
