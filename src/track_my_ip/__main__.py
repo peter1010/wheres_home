@@ -1,10 +1,9 @@
 import sys
-
-print(sys.path)
-
-from . import stun
 import time
 import os
+
+from . import stun
+from . import notify
 
 CACHE_FILE="/var/cache/track_my_ip/history.txt"
 
@@ -50,6 +49,6 @@ def run():
     old_ip_addr = get_last()
     if old_ip_addr != ip_addr:
         record(ip_addr)
-    print("hello")
+        notify.sendMail(ip_addr)
 
 run()
