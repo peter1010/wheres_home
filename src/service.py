@@ -47,15 +47,17 @@ def remove_user(user):
 def make_dir(path, uid, gid):
     if not os.path.exists(path):
         os.mkdir(path)
-    os.chown(path, uid, gid)
-    for f in os.listdir(path):
-        os.chown(os.path.join(path,f), uid, gid)
+    if uid is not None:
+        os.chown(path, uid, gid)
+        for f in os.listdir(path):
+            os.chown(os.path.join(path,f), uid, gid)
 
 
 def start_service():
     gid = create_group("track_my_ip")
     uid = create_user("track_my_ip", gid)
     make_dir(os.path.join("/var","cache", "track_my_ip"), uid, gid)
+    make_dir(os.path.join("/etc","track_my_ip"), None, None)
     subprocess.call(["systemctl","enable","track_my_ip.timer"])
     subprocess.call(["systemctl","start","track_my_ip.timer"])
 
