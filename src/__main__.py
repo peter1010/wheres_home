@@ -8,16 +8,19 @@ from . import notify
 CACHE_FILE="/var/cache/track_my_ip/history.txt"
 
 def get_last():
-    non_blank = None, None
+    last_line = ""
     try:
         with open(CACHE_FILE) as in_fp:
             for line in in_fp:
                 line.strip()
                 if line:
-                    non_blank = line
+                    lasy_line = line
     except FileNotFoundError:
         pass
-    return non_blank.split()[0]
+    parts = last_line.split()
+    if len(parts) > 0:
+        return parts[0]
+    return None
 
 
 def write_record(out_fp, ip_addr):
