@@ -2,8 +2,8 @@
 Description=Find Current public IP address allocated by ISP
 
 [Service]
-User=nobody
-Group=nobody
+User=track_my_ip
+Group=track_my_ip
 Type=oneshot
 ExecStart=/usr/bin/python3 -m track_my_ip
 Nice=19
