@@ -24,13 +24,13 @@ def remove_group(group):
 
 
 
-def create_user(user, gid):
+def create_user(user, home, gid):
     try:
         info = pwd.getpwnam(user)
         uid = info.pw_uid
     except KeyError:
         subprocess.call(["useradd","-r", "-g", str(gid), 
-                "-s", "/bin/false", user])
+                "-s", "/bin/false", "-d", home, user])
         info = pwd.getpwnam(user)
         uid = info.pw_uid
     return uid
@@ -54,9 +54,10 @@ def make_dir(path, uid, gid):
 
 
 def start_service():
+    home = os.path.join("/var","cache", "track_my_ip")
     gid = create_group("track_my_ip")
-    uid = create_user("track_my_ip", gid)
-    make_dir(os.path.join("/var","cache", "track_my_ip"), uid, gid)
+    uid = create_user("track_my_ip", home, gid)
+    make_dir(home, uid, gid)
     make_dir(os.path.join("/etc","track_my_ip"), None, None)
     subprocess.call(["systemctl","enable","track_my_ip.timer"])
     subprocess.call(["systemctl","start","track_my_ip.timer"])
