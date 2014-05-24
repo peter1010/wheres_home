@@ -1,16 +1,28 @@
 track_my_ip
 ===========
 
-Bunch of python scripts to sort of replicate the behaviour of
-DDNS. A periodic task that uses STUN to find out the public
-IP Address and if it changes records the new value in a way
-that it can be picked up remotely. This aids connecting
-home from a remote location.
+This package is a service that finds out your public IP address
+and then emails it to a specificed email account. The objective
+is to known your home IP address when away allowing you to 
+connect home (assuming you have allowed access e.g. via enabling
+port forwarding on your router.
 
-The record changes can be configured to:
-- email the new IP address.
-- use dropbox.
-- use API of a DDNS provider.
+This is an alternative to using a DDNS service.
 
-In additional the change of IP address is logged locally
-so we can track how the ISP allocates IP addresses to us.
+This is a python package that is called from a systemd timer and
+uses the STUN protocol to ask a STUN server what your IP address
+is. The IP address is stored in a file so each time the package is
+run it can check if it has changed. If the IP address has changed
+an email is sent to the specificed email address and the subject
+contains the new IP address.
+
+This package depends on:
+
+- systemd timers
+- sendmail or sendmail alternative like msmtp-mta
+
+IP address is recorded in /var/cache/track_my_ip/history.txt
+Email address is read from /etc/track_my_ip/email
+
+
+
