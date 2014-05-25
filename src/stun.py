@@ -48,6 +48,12 @@ def create_msg_header(msg_type, msg_length, tran_id):
     return struct.pack(">HHLLQ", msg_type, msg_length, magic, tran_id >> 64,
             tran_id & 0xFFFFFFFFFFFFFFFF)
 
+def extract_msg_header(hdr):
+    msg_type, msg_len, magic, part1, part2 = struct.unpack(">HHLLQ", hdr)
+    resp_tran_id = part1 << 64 | part2
+    if magic != 0x2112A442:
+        loggin.error("Invalid STUN magic cookie")
+    return msg_type, msg_len, resp_tran_id
 
 def create_binding_request(tran_id):
     """Create a binding request, message type is 1 (see RFC5389)"""
@@ -58,7 +64,7 @@ def extract_tlv(msg):
     if name != 0:
         value = msg[4:4+val_len]
         return name, value, msg[4+val_len:]
-    raise RuntimeError
+    raise RuntimeError("name is 0")
 
 def process_tlv_addr(value):
     family, port = struct.unpack(">xBH", value[:4])
@@ -67,6 +73,8 @@ def process_tlv_addr(value):
     elif family == 0x02: # IPv6
         addr = ":".join([("%04X" % x) for x in struct.unpack(">HHHHHHHH",
                 value[4:])])
+    else:
+        raise RuntimeError("family '%i' unknown" % family)
     return (addr, port)
 
 
@@ -106,7 +114,9 @@ def process_xor_map_addr(value):
         addr = ".".join([str(x ^ m) for x,m in zip(value[4:], (0x21, 0x12, 0xA4,
             0x42))])
     elif family == 0x02: # IPv6
-        raise RuntimeError
+        raise RuntimeError("IPv6 not supported yet")
+    else:
+        raise RuntimeError("family '%i' unknown" % family)
     logging.debug("XOR-MAPPED-ADDRESS=%s" % str((addr, port)))
     return (addr, port)
 
@@ -138,16 +148,13 @@ def process_binding_response(body):
             process_software(value)
         else:
             logging.warning("Unknown TLV = %i" % name)
-            return None
     return mapped[0]
 
 def process_response(buf, req_tran_id):
     hdr = buf[:20]
-    msg_type, msg_len, magic, part1, part2 = struct.unpack(">HHLLQ", hdr)
-    resp_tran_id = part1 << 64 | part2
+    msg_type, msg_len, resp_tran_id = extract_msg_header(hdr)
     body = buf[20:20+msg_len]
-    if magic != 0x2112A442:
-        loggin.error("Invalid STUN magic cookie")
+
     if resp_tran_id != req_tran_id:
         print("Mis-match between Request and Response Transaction ID")
         return None
