@@ -7,8 +7,6 @@ import select
 
 from . import stun_list
 
-logging.basicConfig(level=logging.DEBUG)
-
 TLV_MAP_ADDR = 1
 TLV_RESP_ADDR = 2  # Obsolete in RFC5389
 TLV_CHG_REQ = 3    # Obsolete in RFC5389

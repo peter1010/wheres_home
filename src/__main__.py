@@ -1,6 +1,8 @@
 import sys
 import time
 import os
+import argparse
+import logging
 
 from . import stun
 from . import notify
@@ -49,6 +51,16 @@ def record(ip_addr):
             write_record(out_fp, ip_addr)
 
 def run():
+    parser = argparse.ArgumentParser(
+            description="Track My IP")
+    parser.add_argument('-d','--debug', action="store_true", default=False, 
+            help="Enable debug")
+    args = parser.parse_args()
+    log = logging.getLogger()
+    if args.debug:
+        print("Debug enabled")
+        log.setLevel(logging.DEBUG)
+
     ip_addr = stun.do_stun_transaction()
     old_ip_addr = get_last()
     if old_ip_addr != ip_addr:
