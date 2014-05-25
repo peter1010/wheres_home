@@ -5,7 +5,7 @@ def get_to_address():
     fpath = os.path.join("/etc", "track_my_ip", "email")
     with open(fpath) as infp:
         name = infp.read().strip()
-    logging.debug("Using Email address '%'" % name)
+    logging.debug("Using Email address '%s'" % name)
     return name
 
 
@@ -18,8 +18,8 @@ def sendMail(msg):
     p.write("Subject: %s\n" % msg)
     p.write("\n") # blank line separating headers from body
     status = p.close()
-    if status != 0:
-        logging.warn("Sendmail exit status", status)
+    if status is not None:
+        logging.warn("Sendmail exit status was %s" % str(status))
 
 if __name__ == "__main__":
     sendMail("10.0.0.1")
