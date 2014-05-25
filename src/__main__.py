@@ -12,11 +12,11 @@ CACHE_FILE="/var/cache/track_my_ip/history.txt"
 def get_last():
     last_line = ""
     try:
-        with open(CACHE_FILE) as in_fp:
+        with open(CACHE_FILE, "r") as in_fp:
             for line in in_fp:
                 line.strip()
                 if line:
-                    lasy_line = line
+                    last_line = line
     except FileNotFoundError:
         pass
     parts = last_line.split()
