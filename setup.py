@@ -9,9 +9,10 @@ from distutils.command import install_data, install
 class my_install(install.install):
     def run(self):
         retVal = super().run()
-        if not os.getenv("DONT_START"):
-            from src import service
-            service.start_service()
+        if self.root is None or not self.root.endswith("dumb"):
+            if not os.getenv("DONT_START"):
+                from src import service
+                service.start_service()
         return retVal;
 
 
