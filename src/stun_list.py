@@ -1,7 +1,6 @@
 import random
 
-stun_servers_list = \
-(
+stun_servers_list = (
     "stun.l.google.com:19302",
     "stun1.l.google.com:19302",
     "stun2.l.google.com:19302",
@@ -22,6 +21,7 @@ stun_servers_list = \
     "stun.voxgratia.org",
     "stun.xten.com"
 )
+
 
 def pick_server():
     server = random.choice(stun_servers_list)

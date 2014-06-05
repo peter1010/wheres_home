@@ -34,9 +34,10 @@ TLV_SOFTWARE = 0x8022
 TLV_ALT_SERVER = 0x8023
 TLV_FINGERPRINT = 0x8028
 
+
 def create_transaction_id():
     """Generate a 96 bit (12 byte) random number"""
-    return functools.reduce(lambda x,y: (x << 8) + y, os.urandom(12))
+    return functools.reduce(lambda x, y: (x << 8) + y, os.urandom(12))
 
 
 def create_msg_header(msg_type, msg_length, tran_id):
@@ -44,18 +45,21 @@ def create_msg_header(msg_type, msg_length, tran_id):
     Transaction ID"""
     magic = 0x2112A442
     return struct.pack(">HHLLQ", msg_type, msg_length, magic, tran_id >> 64,
-            tran_id & 0xFFFFFFFFFFFFFFFF)
+                       tran_id & 0xFFFFFFFFFFFFFFFF)
+
 
 def extract_msg_header(hdr):
     msg_type, msg_len, magic, part1, part2 = struct.unpack(">HHLLQ", hdr)
     resp_tran_id = part1 << 64 | part2
     if magic != 0x2112A442:
-        loggin.error("Invalid STUN magic cookie")
+        logging.error("Invalid STUN magic cookie")
     return msg_type, msg_len, resp_tran_id
+
 
 def create_binding_request(tran_id):
     """Create a binding request, message type is 1 (see RFC5389)"""
     return create_msg_header(1, 0, tran_id)
+
 
 def extract_tlv(msg):
     name, val_len = struct.unpack(">HH", msg[:4])
@@ -64,13 +68,14 @@ def extract_tlv(msg):
         return name, value, msg[4+val_len:]
     raise RuntimeError("name is 0")
 
+
 def process_tlv_addr(value):
     family, port = struct.unpack(">xBH", value[:4])
     if family == 0x01:   # IPv4
         addr = ".".join([str(x) for x in value[4:]])
-    elif family == 0x02: # IPv6
+    elif family == 0x02:  # IPv6
         addr = ":".join([("%04X" % x) for x in struct.unpack(">HHHHHHHH",
-                value[4:])])
+                        value[4:])])
     else:
         raise RuntimeError("family '%i' unknown" % family)
     return (addr, port)
@@ -109,9 +114,9 @@ def process_xor_map_addr(value):
     family, port = struct.unpack(">xBH", value[:4])
     port = port ^ 0x2112
     if family == 0x01:   # IPv4
-        addr = ".".join([str(x ^ m) for x,m in zip(value[4:], (0x21, 0x12, 0xA4,
-            0x42))])
-    elif family == 0x02: # IPv6
+        addr = ".".join([str(x ^ m) for x, m in zip(value[4:],
+                        (0x21, 0x12, 0xA4, 0x42))])
+    elif family == 0x02:  # IPv6
         raise RuntimeError("IPv6 not supported yet")
     else:
         raise RuntimeError("family '%i' unknown" % family)
@@ -148,6 +153,7 @@ def process_binding_response(body):
             logging.warning("Unknown TLV = %i" % name)
     return mapped[0]
 
+
 def process_response(buf, req_tran_id):
     hdr = buf[:20]
     msg_type, msg_len, resp_tran_id = extract_msg_header(hdr)
@@ -158,15 +164,16 @@ def process_response(buf, req_tran_id):
         return None
     if msg_type == 0x101:   # Binding Response
         return process_binding_response(body)
-    elif msg_type == 0x111: # Binding Error Response
+    elif msg_type == 0x111:  # Binding Error Response
         pass
-    elif msg_type == 0x102: # Shared Secret Response
+    elif msg_type == 0x102:  # Shared Secret Response
         pass
-    elif msg_type == 0x112: # Shared Secret Error Response
+    elif msg_type == 0x112:  # Shared Secret Error Response
         pass
     else:
         print("Invalid STUN response msg type (%04x)", msg_type)
         return None
+
 
 def do_stun_transaction():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -192,7 +199,7 @@ def do_stun_transaction():
             except socket.gaierror:
                 break
 
-            rds, wrs, ers = select.select([s],[],[], timeout)
+            rds, wrs, ers = select.select([s], [], [], timeout)
             if len(rds) > 0:
                 buf, addr = s.recvfrom(2048)
                 public_addr = process_response(buf, tran_id)
@@ -201,6 +208,7 @@ def do_stun_transaction():
                 logging.warning("Timed out waiting for response")
     s.close()
     return public_addr
+
 
 if __name__ == "__main__":
     print(do_stun_transaction())

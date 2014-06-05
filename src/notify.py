@@ -1,6 +1,7 @@
 import os
 import logging
 
+
 def get_to_address():
     fpath = os.path.join("/etc", "track_my_ip", "email")
     with open(fpath) as infp:
@@ -10,13 +11,13 @@ def get_to_address():
 
 
 def sendMail(msg):
-    sendmail_location = "/usr/sbin/sendmail" # sendmail location
+    sendmail_location = "/usr/sbin/sendmail"  # sendmail location
     p = os.popen("%s -t" % sendmail_location, "w")
     name = get_to_address()
 #    p.write("From: %s\n" % name)
     p.write("To: %s\n" % name)
     p.write("Subject: %s\n" % msg)
-    p.write("\n") # blank line separating headers from body
+    p.write("\n")  # blank line separating headers from body
     status = p.close()
     if status is not None:
         logging.warn("Sendmail exit status was %s" % str(status))
