@@ -16,18 +16,18 @@ class my_install(install.install):
 
 
 setup(
-    name='track_my_ip',
+    name='wheres_home',
     version='1.0',
     description="Keep track of current public IP address",
-    url='https://github.com/peter1010/track_my_ip',
+    url='https://github.com/peter1010/wheres_home',
     author='Peter1010',
     author_email='peter1010@localnet',
     license='GPL',
-    package_dir={'track_my_ip': 'src'},
-    packages=['track_my_ip'],
+    package_dir={'wheres_home': 'src'},
+    packages=['wheres_home'],
     data_files=[
         ('/usr/lib/systemd/system',
-         ('track_my_ip.timer', 'track_my_ip.service'))
+         ('wheres_home.timer', 'wheres_home.service'))
     ],
     cmdclass={'install': my_install}
 )

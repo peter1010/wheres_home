@@ -54,20 +54,20 @@ def make_dir(path, uid, gid):
 
 
 def start_service():
-    home = os.path.join("/var", "cache", "track_my_ip")
-    gid = create_group("track_my_ip")
-    uid = create_user("track_my_ip", home, gid)
+    home = os.path.join("/var", "cache", "wheres_home")
+    gid = create_group("wheres_home")
+    uid = create_user("wheres_home", home, gid)
     make_dir(home, uid, gid)
-    make_dir(os.path.join("/etc", "track_my_ip"), None, None)
-    subprocess.call(["systemctl", "enable", "track_my_ip.timer"])
-    subprocess.call(["systemctl", "start", "track_my_ip.timer"])
+    make_dir(os.path.join("/etc", "wheres_home"), None, None)
+    subprocess.call(["systemctl", "enable", "wheres_home.timer"])
+    subprocess.call(["systemctl", "start", "wheres_home.timer"])
 
 
 def stop_service():
-    subprocess.call(["systemctl", "stop", "track_my_ip.timer"])
-    subprocess.call(["systemctl", "disable", "track_my_ip.timer"])
-    remove_user("track_my_ip")
-    remove_group("track_my_ip")
+    subprocess.call(["systemctl", "stop", "wheres_home.timer"])
+    subprocess.call(["systemctl", "disable", "wheres_home.timer"])
+    remove_user("wheres_home")
+    remove_group("wheres_home")
 
 if __name__ == "__main__":
     if sys.argv[1] == "start":

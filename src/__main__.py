@@ -6,7 +6,7 @@ import logging
 from . import stun
 from . import notify
 
-CACHE_FILE = "/var/cache/track_my_ip/history.txt"
+CACHE_FILE = "/var/cache/wheres_home/history.txt"
 
 
 def get_last():

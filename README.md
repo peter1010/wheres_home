@@ -1,9 +1,9 @@
-track_my_ip
+wheres_home
 ===========
 
 This package is run as a service that finds out your public IP address
 and then emails it to a specificed email account. The objective
-is to know your home IP address when you are away allowing you to 
+is to know your home IP address when you are away allowing you to
 connect home (assuming you have allowed access e.g. via enabling
 port forwarding on your router).
 
@@ -27,8 +27,8 @@ This package depends on:
 - systemd timers
 - sendmail or sendmail alternative like msmtp-mta
 
-IP address is recorded in /var/cache/track_my_ip/history.txt
-Email address is read from /etc/track_my_ip/email
+IP address is recorded in /var/cache/wheres_home/history.txt
+Email address is read from /etc/wheres_home/email
 
 installation
 ------------

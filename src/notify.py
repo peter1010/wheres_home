@@ -3,7 +3,7 @@ import logging
 
 
 def get_to_address():
-    fpath = os.path.join("/etc", "track_my_ip", "email")
+    fpath = os.path.join("/etc", "wheres_home", "email")
     with open(fpath) as infp:
         name = infp.read().strip()
     logging.debug("Using Email address '%s'" % name)

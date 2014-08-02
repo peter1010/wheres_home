@@ -2,10 +2,10 @@
 Description=Find Current public IP address allocated by ISP
 
 [Service]
-User=track_my_ip
-Group=track_my_ip
+User=wheres_home
+Group=wheres_home
 Type=oneshot
-ExecStart=/usr/bin/python3 -m track_my_ip
+ExecStart=/usr/bin/python3 -m wheres_home
 Nice=19
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7

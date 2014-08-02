@@ -2,7 +2,7 @@
 import unittest
 import struct
 
-from track_my_ip import stun
+from wheres_home import stun
 
 
 class StunTests(unittest.TestCase):

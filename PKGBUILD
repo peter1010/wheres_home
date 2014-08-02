@@ -1,15 +1,15 @@
-pkgbase=track_my_ip
-pkgname=('track_my_ip')
+pkgbase=wheres_home
+pkgname=('wheres_home')
 pkgver=1.0
 pkgrel=1
-pkgdesc="track_my_ip"
+pkgdesc="wheres_home"
 arch=('any')
 url="github"
 license=('GPL')
 makedepends=('python')
 depends=('python' 'msmtp-mta')
 source=()
-install='track_my_ip.install'
+install='wheres_home.install'
 
 pkgver() {
     python ../setup.py -V
