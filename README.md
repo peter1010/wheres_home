@@ -27,8 +27,8 @@ This package depends on:
 - systemd timers
 - sendmail or sendmail alternative like msmtp-mta
 
-IP address is recorded in /var/cache/wheres_home/history.txt
-Email address is read from /etc/wheres_home/email
+IP address is recorded in /var/cache/wheres_home/history.txt.
+The Email address to use is read from /etc/wheres_home/email
 
 installation
 ------------
