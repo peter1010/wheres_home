@@ -1,7 +1,7 @@
 pkgbase=wheres_home
 pkgname=('wheres_home')
 pkgver=1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="wheres_home"
 arch=('any')
 url="github"

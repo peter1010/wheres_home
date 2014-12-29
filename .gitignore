@@ -3,3 +3,4 @@ build
 pkg
 dist
 *.tar.xz
+__pycache__

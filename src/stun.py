@@ -4,8 +4,12 @@ import os
 import functools
 import logging
 import select
+import random
 
-from . import stun_list
+logger = logging.getLogger(__name__)
+
+#from . import stun_list
+import stun_list
 
 TLV_MAP_ADDR = 1
 TLV_RESP_ADDR = 2  # Obsolete in RFC5389
@@ -52,7 +56,7 @@ def extract_msg_header(hdr):
     msg_type, msg_len, magic, part1, part2 = struct.unpack(">HHLLQ", hdr)
     resp_tran_id = part1 << 64 | part2
     if magic != 0x2112A442:
-        logging.error("Invalid STUN magic cookie")
+        logger.error("Invalid STUN magic cookie")
     return msg_type, msg_len, resp_tran_id
 
 
@@ -84,28 +88,28 @@ def process_tlv_addr(value):
 def process_map_addr(value):
     """Process the MAPPED-ADDRESS attribute"""
     addr_port = process_tlv_addr(value)
-    logging.debug("MAPPED-ADDRESS=%s" % str(addr_port))
+    logger.debug("MAPPED-ADDRESS=%s" % str(addr_port))
     return addr_port
 
 
 def process_src_addr(value):
     """Process the SOURCE-ADDRESS attribute"""
     addr_port = process_tlv_addr(value)
-    logging.debug("SOURCE-ADDRESS=%s" % str(addr_port))
+    logger.debug("SOURCE-ADDRESS=%s" % str(addr_port))
     return addr_port
 
 
 def process_chg_addr(value):
     """Process the CHANGED-ADDRESS attribute"""
     addr_port = process_tlv_addr(value)
-    logging.debug("CHANGED-ADDRESS=%s" % str(addr_port))
+    logger.debug("CHANGED-ADDRESS=%s" % str(addr_port))
     return addr_port
 
 
 def process_refl_addr(value):
     """Process the REFLECT-FROM attribute"""
     addr_port = process_tlv_addr(value)
-    logging.debug("REFLECT-FROM=%s" % str(addr_port))
+    logger.debug("REFLECT-FROM=%s" % str(addr_port))
     return addr_port
 
 
@@ -120,13 +124,13 @@ def process_xor_map_addr(value):
         raise RuntimeError("IPv6 not supported yet")
     else:
         raise RuntimeError("family '%i' unknown" % family)
-    logging.debug("XOR-MAPPED-ADDRESS=%s" % str((addr, port)))
+    logger.debug("XOR-MAPPED-ADDRESS=%s" % str((addr, port)))
     return (addr, port)
 
 
 def process_software(value):
     """Process the SOFTWARE attribute"""
-    logging.info("SOFWARE=%s" % value.decode('utf8'))
+    logger.info("SOFWARE=%s" % value.decode('utf8'))
 
 
 def process_binding_response(body):
@@ -141,7 +145,7 @@ def process_binding_response(body):
         elif name == TLV_CHG_ADDR:
             chg = process_chg_addr(value)
         elif name == TLV_MSG_INT:
-            logging.debug("TLV_MSG_INT")
+            logger.debug("TLV_MSG_INT")
             pass
         elif name == TLV_REFLECT:
             refl = process_refl_addr(value)
@@ -150,7 +154,7 @@ def process_binding_response(body):
         elif name == TLV_SOFTWARE:
             process_software(value)
         else:
-            logging.warning("Unknown TLV = %i" % name)
+            logger.warning("Unknown TLV = %i" % name)
     return mapped[0]
 
 
@@ -185,17 +189,16 @@ def do_stun_transaction():
     for server_tries in range(5):
         if public_addr:
             break
-        stun_server = stun_list.pick_server()
-        logging.info("Connecting to %s" % str(stun_server))
+        sockaddr = stun_list.pick_server()
         tran_id = create_transaction_id()
-        logging.debug("TID=%i" % tran_id)
+        logger.debug("TID=%i" % tran_id)
         msg = create_binding_request(tran_id)
         timeout = 0.5
         for msg_tries in range(7):
             if public_addr:
                 break
             try:
-                s.sendto(msg, stun_server)
+                s.sendto(msg, sockaddr)
             except socket.gaierror:
                 break
 
@@ -205,10 +208,11 @@ def do_stun_transaction():
                 public_addr = process_response(buf, tran_id)
             else:
                 timeout = 2*timeout
-                logging.warning("Timed out waiting for response")
+                logger.warning("Timed out waiting for response")
     s.close()
     return public_addr
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     print(do_stun_transaction())
