@@ -8,8 +8,10 @@ import random
 
 logger = logging.getLogger(__name__)
 
-#from . import stun_list
-import stun_list
+try:
+    import stun_list
+except ImportError:
+    from . import stun_list
 
 TLV_MAP_ADDR = 1
 TLV_RESP_ADDR = 2  # Obsolete in RFC5389
