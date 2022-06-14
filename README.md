@@ -15,11 +15,6 @@ run it can check if it has changed.
 dependencies
 ------------
 
-This package depends on:
-
-- systemd timers
-- sendmail or sendmail alternative like msmtp-mta
-
 IP address is recorded in stub_history.txt in current working directory
 
 installation
