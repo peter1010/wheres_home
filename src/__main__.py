@@ -27,7 +27,7 @@ def get_last():
 def write_record(out_fp, ip_addr):
     out_fp.write(ip_addr)
     out_fp.write("\t")
-    out_fp.write(str(time.time()))
+    out_fp.write(time.strftime("%d-%b-%Y %H:%M"))
     out_fp.write("\n")
 
 
