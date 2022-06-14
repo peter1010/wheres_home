@@ -4,9 +4,8 @@ import argparse
 import logging
 
 from . import stun
-from . import notify
 
-CACHE_FILE = "/var/cache/wheres_home/history.txt"
+CACHE_FILE = "stun_history.txt"
 
 
 def get_last():
@@ -57,6 +56,9 @@ def run():
                         help="Enable debug")
     args = parser.parse_args()
     log = logging.getLogger()
+    ch = logging.StreamHandler()
+    log.addHandler(ch)
+
     if args.debug:
         print("Debug enabled")
         log.setLevel(logging.DEBUG)
@@ -65,6 +67,5 @@ def run():
     old_ip_addr = get_last()
     if old_ip_addr != ip_addr:
         record(ip_addr)
-        notify.sendMail(ip_addr)
 
 run()
